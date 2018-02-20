@@ -19,9 +19,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var bottomSheet: BottomSheetBehavior<LinearLayout>
+    private lateinit var bottomSheetHideableHelper: BottomSheetHideableHelper
     private lateinit var adapter: IssueListAdapter
-
-    private var bottomSheetHideable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         // initialize variables
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         bottomSheet = BottomSheetBehavior.from(binding.bottomSheet)
+        bottomSheetHideableHelper = BottomSheetHideableHelper(bottomSheet)
         adapter = IssueListAdapter(this).also {
             it.setItemClickListener { issue ->
                 showOrHideBottomSheet(issue.id % 2 == 0)
@@ -42,12 +42,7 @@ class MainActivity : AppCompatActivity() {
         bottomSheet.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(view: View, newState: Int) {
                 Log.d("MainActivity", "BottomSheetCallback#onStateChanged: newState=${newState}")
-
-                // hideable=falseに指定するのは、実際にHIDDENじゃなくなってから
-                if (newState != BottomSheetBehavior.STATE_HIDDEN && !bottomSheetHideable && bottomSheet.isHideable) {
-                    Log.d("MainActivity", "showOrHideBottomSheet: ここでhideableにする")
-                    bottomSheet.isHideable = false
-                }
+                bottomSheetHideableHelper.onStateChanged(newState)
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -69,12 +64,10 @@ class MainActivity : AppCompatActivity() {
     private fun showOrHideBottomSheet(show: Boolean) {
         if (show) {
             bottomSheet.state = BottomSheetBehavior.STATE_COLLAPSED
-            Log.d("MainActivity", "showOrHideBottomSheet: ここでhideableにしたいけどできなさそう")
-            bottomSheetHideable = false
+            bottomSheetHideableHelper.setHideable(false)
 
         } else {
-            bottomSheetHideable = true
-            bottomSheet.isHideable = true
+            bottomSheetHideableHelper.setHideable(true)
             bottomSheet.state = BottomSheetBehavior.STATE_HIDDEN
         }
     }
